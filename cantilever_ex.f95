@@ -5,6 +5,8 @@ program cantilever_ex
         !Foi gerada a submatriz de rigidez kll
         real*8, dimension (3,3) :: prop, kll, invkll
         real, dimension (3,1) ::  kli, kii
+        real, dimension (1,3) :: transkli
+        real, dimension (1) :: f_imp
         real, dimension (1,2) :: cc
         real, dimension (3,2) :: fa
         integer, dimension (3,2) :: mat_conect
@@ -78,8 +80,12 @@ program cantilever_ex
             call inv(kll, invkll, n)
             
             u_liv = matmul(invkll,fa(:,2))*1000
-            print*, '----------'
+            print*, 'os valosres dos deloscamentos no gdl livres sao:'
             print*,u_liv
+            print*, 'os valores das reacoes sao:'
+            transkli = transpose(kli)
+            f_imp = matmul(transkli,u_liv)/1000
+            print*, f_imp
 end program
                     
         subroutine matmu (A,B,C,D)
