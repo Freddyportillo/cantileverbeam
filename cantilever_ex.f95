@@ -84,7 +84,8 @@ program cantilever_ex
             print*,u_liv
             print*, 'os valores das reacoes sao:'
             transkli = transpose(kli)
-            f_imp = matmul(transkli,u_liv)/1000
+            u_liv = u_liv/1000 !em m
+            f_imp = matmul(transkli,u_liv)/1000 !em kN
             print*, f_imp
 end program
                     
