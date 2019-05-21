@@ -18,22 +18,24 @@ program cantilever_ex
         real, dimension (2,4) :: mat_transf
         real, dimension (4,2) :: transmat
         real, dimension (4,4) :: kglobal, kglobal1
-        real :: a,e
+        real :: a,e,l
         integer,dimension (1) :: gdl_impostos
             nele = 3
             nnodes = 4
             ngdl = 4
-            a = 25.3/10**4
-            e = 9*10**10
-            prop(1,:) = (/a, e, 1.0/)
-            prop(2,:) = (/a, e, 0.5/)
-            prop(3,:) = (/a, e, 3.5/)
-            
+            a = 5000/10**4
+            e = 2.1*10**5
+            l = 2/3
+           
+            prop(1,:) = (/a, e, l/)
+            prop(2,:) = (/a, e, l/)
+            prop(3,:) = (/a, e, l/)
+             
             cc (1,:) = (/1,0/)
             
-            fa (1,:) = (/2, -1000/)
-            fa (2,:) = (/3, 1000/)
-            fa (3,:) = (/4, -2000/)
+            fa (1,:) = (/2, 0/)
+            fa (2,:) = (/3, 0/)
+            fa (3,:) = (/4, -10000/)
             
             mat_conect (1,:) = (/1,2/)
             mat_conect (2,:) = (/2,3/)
@@ -73,6 +75,7 @@ program cantilever_ex
             print*, kll
             print*, '----------'
             print*, kli
+            print*, mat_transf
             !kii = kglobal(gdl_impostos,gdl_impostos)
             
             !deslocamentos no gdl gdl_livres
@@ -87,6 +90,7 @@ program cantilever_ex
             u_liv = u_liv/1000 !em m
             f_imp = matmul(transkli,u_liv)/1000 !em kN
             print*, f_imp
+            
 end program
                     
         subroutine matmu (A,B,C,D)
