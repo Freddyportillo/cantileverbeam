@@ -2,31 +2,32 @@ program cantilever1forca
    
    implicit none
     
-    double precision, dimension (2,2) :: cc
+    integer, dimension (2,2) :: cc
     double precision, dimension (4,22) ::  mat_transf
     double precision, dimension (1,4) :: prop
     double precision, dimension (22,4) :: transmat
     double precision :: a, e, l, i
-    integer :: ii, ngdl, nele, nnodes
+    integer :: ii, ngdl, nele, nnodes, jj
     double precision, dimension (4,4) :: kop, kele
     integer, dimension (20,2) :: fa
     double precision, dimension (20,20) :: invkll, kll
     integer :: n
     double precision :: coef
     double precision, dimension (22,22) :: kglobal, kglobal1
+    double precision, dimension (22) :: des_global
     integer, dimension (22,22) :: ident
     integer, dimension (20,4) ::  mat_conect
     double precision, dimension (20) :: u_liv
     double precision, dimension (20) :: flivres
     integer, dimension (20) :: gdl_livres
     integer, dimension (2) :: gdl_impostos
+    double precision, dimension (5,1) :: desloc_trans
     
-!     a1 = 0.05
-!     a2 = 0.1
+
     a = 0.05
     e = 2.1*10**11
     l = 0.2 !m
-    i = 5/(12*10**8)
+    i = 4.16666/10**9
     
     nele = 10
     nnodes = nele+1
@@ -35,27 +36,12 @@ program cantilever1forca
     cc(1,:) = (/1,0/)
     cc(2,:) = (/2,0/)
     
-    fa(1,:) = (/3,0/)
-    fa(2,:) = (/4,0/)
-    fa(3,:) = (/5,0/)
-    fa(4,:) = (/6,0/)
-    fa(5,:) = (/7,0/)
-    fa(6,:) = (/8,0/)
-    fa(7,:) = (/9,0/)
-    fa(8,:) = (/10,0/)
-    fa(9,:) = (/11,0/)
-    fa(10,:) = (/12,0/)
-    fa(11,:) = (/13,0/)
-    fa(12,:) = (/14,0/)
-    fa(13,:) = (/15,0/)
-    fa(14,:) = (/16,0/)
-    fa(15,:) = (/17,0/)
-    fa(16,:) = (/18,0/)
-    fa(17,:) = (/19,0/)
-    fa(18,:) = (/20,0/)
-    fa(19,:) = (/21,0/)
-    fa(20,:) = (/22,-200/)
-    
+    do ii = 1,18
+        fa(ii,:) = (/ii+2,0/)
+    end do
+
+    fa(19,:) = (/21,-30/) !forca aplicada no extremo livre da viga
+    fa(20,:) = (/22, 0/)
     
     prop(1,:) = (/a, e, l, i/)
     
@@ -72,7 +58,7 @@ program cantilever1forca
     mat_conect(10,:) = (/19,20,21,22/)
     kop = 0
     kop(1,:) =     (/12.0d0,  6.0d0*l,   -12.0d0,  6.0d0*l/)
-        kop(2,:) = (/6.0d0*l, 4.0d0*l*2, -6.0d0*l, 2.0d0*l**2/)
+        kop(2,:) = (/6.0d0*l, 4.0d0*l**2, -6.0d0*l, 2.0d0*l**2/)
         kop(3,:) = (/-12.0d0, -6.0d0*l,      12.0d0, -6.0d0*l/)
         kop(4,:) = (/6.0d0*l, 2.0d0*l**2,-6.0d0*l, 4.0d0*l**2/)
     
@@ -84,7 +70,7 @@ program cantilever1forca
     kglobal1 = 0
     kele = 0
     
-    coef = 109375.0d0
+    coef = e*i/(l**3) 
     do ii=1,nele
                 
                 kele = coef*kop
@@ -95,33 +81,56 @@ program cantilever1forca
                 transmat = transpose(mat_transf)
                 call matmu(transmat,kele,mat_transf,kglobal1)
                 kglobal = kglobal+kglobal1
+!                 
+
+                
             end do
-       print*, kglobal
-!     gdl_livres = fa(:,1)
-!    
-!      gdl_impostos = cc(:,1)
-!     
-!      kll = kglobal(gdl_livres,gdl_livres)
-! !      kli = kglobal(gdl_livres,gdl_impostos)
-!      
-!      
-!      n = 10
-!      call inv(kll, invkll, n) 
-!      flivres = fa(:,2)
-!      u_liv = matmul(invkll,fa(:,2))
-!     
-!      print*, u_liv
-!         
+       
+      
+       
+     gdl_livres = fa(:,1)
+    
+    gdl_impostos = cc(:,1)
+  
+      kll = kglobal(gdl_livres,gdl_livres)
+!       kli = kglobal(gdl_livres,gdl_impostos)
+     
+      
+      n = 20
+      call inv(kll, invkll, n) 
+      flivres = fa(:,2)
+      
+      u_liv = matmul(invkll,fa(:,2))
+      
+        des_global= 0.0d0
+        desloc_trans = 0.0d0
+        
+         des_global(cc(:,1))= 0.0d0
+         des_global(fa(:,1)) = u_liv
+         
+        print*,'Deslocamentos (em metros)'
+      
+        do jj = 1,nele
+            do ii = 1,ngdl-1,2
+                desloc_trans(jj,1) = des_global(ii)
+        end do
+            end do
+
+            
+      print*, u_liv
+      print*, '---------------'
+      print*, desloc_trans
+         
      
     end program
     
     subroutine matmu (A,B,C,D)
       !programa para multiplicacao de 3 matrizes
   
-  double precision, dimension (11,2) :: A, mul
-  double precision, dimension (2,2) :: B
-  double precision, dimension (2,11) :: C
-  double precision, dimension (11,11) :: D
+  double precision, dimension (22,4) :: A, mul
+  double precision, dimension (4,4) :: B
+  double precision, dimension (4,22) :: C
+  double precision, dimension (22,22) :: D
   
   mul = matmul(A,B)
   D = matmul (mul,C)
@@ -186,14 +195,4 @@ do k=1,n
   b(k)=0.0
 end do
     end subroutine inv
-!     subroutine kop (k)
-!         
-!         double precision, dimension (4,4) :: k
-!         
-!         k(1,:) = (/12, 6*l, -12, 6*l/)
-!         k(2,:) = (/0, 4*l*2, -6*l, 2*l**2/)
-!         k(3,:) = (/0, 0, 12, -6*l/)
-!         k(4,:) = (/0, 0, 0, 4*l**2/)
-!         
-!         end subroutine kop
-!     
+
