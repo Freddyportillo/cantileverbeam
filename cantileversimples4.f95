@@ -8,11 +8,14 @@ implicit none
     double precision, dimension (4,12) ::  mat_transf
     double precision, dimension (1,4) :: prop
     double precision, dimension (12,4) :: transmat
-    double precision :: a, e, l, i
+    double precision :: a, e, l, i, ymax, x
     integer :: ii, ngdl, nele, nnodes
     double precision, dimension (4,4) :: kop, kele
     integer, dimension (10,2) :: fa
     double precision, dimension (10,10) :: invkll, kll
+    double precision, dimension (10,2) :: kli
+    double precision, dimension (2,10) :: transkli
+    double precision, dimension (2,2) :: kii
     integer :: n
     double precision :: coef
     double precision, dimension (12,12) :: kglobal, kglobal1
@@ -23,13 +26,21 @@ implicit none
     double precision, dimension (10) :: flivres
     integer, dimension (10) :: gdl_livres
     integer, dimension (2) :: gdl_impostos
-    double precision, dimension (12) :: desloc_trans
+    double precision, dimension (2,1) :: u_imp
+    double precision, dimension (2) :: f_imp
+    double precision, dimension (6) :: desloc_trans, rot
+    double precision, dimension (4,1) :: u_e
+    double precision, dimension (1,4) :: psi2_0, psi2_l
+    double precision, dimension (5,2) :: mat_sigma
+    double precision, dimension (1,1) :: psi_ue1, psi_ue2
+    
     
 
     a = 0.05
     e = 2.1*10**11
     l = 0.4 !m
     i = 4.16666/10**9
+    ymax = 0.005
     
     nele = 5
     nnodes = nele+1
@@ -91,7 +102,8 @@ implicit none
     gdl_impostos = cc(:,1)
   
       kll = kglobal(gdl_livres,gdl_livres)
-!       kli = kglobal(gdl_livres,gdl_impostos)
+      kli = kglobal(gdl_livres, gdl_impostos)
+      kii = kglobal(gdl_impostos,gdl_impostos)
      
       
       n = 10
@@ -99,20 +111,39 @@ implicit none
       flivres = fa(:,2)
       
       u_liv = matmul(invkll,fa(:,2))
-      
+!       u_imp = cc(:,2)
         des_global= 0.0d0
         desloc_trans = 0.0d0
         
          des_global(cc(:,1))= cc(:,2)
          des_global(fa(:,1)) = u_liv
-        print*,'Deslocamentos (em metros)'
-         desloc_trans(:)=des_global(1:2:nele)
+         print*,'Deslocamentos (em metros)'
+         desloc_trans=des_global(1:nele:2)
+         print*, desloc_trans
+         print*, '----------------------------'
+         print*, 'os valores da rotação da seção transversal é (rad):'
+         rot = des_global(2:nele+1:2)
+         print*, rot
+         print*, '----------------------------'
+         transkli = transpose(kli)
+         f_imp = (matmul(transkli,u_liv)) 
+         print*, 'as reacoes no apoio são (N):'
+         print*, f_imp
          
-      print*,
-      
-      print*, des_global
-         
-     
+!     CÁLCULO DAS TENSÕES NORMAIS DE FLEXÃO MÁXIMAS NOS NÓS
+        
+        do ii=1,nele
+            u_e(:,1) = des_global(mat_conect(ii,:))
+            x = 0.0d0
+            psi2_0(1,:) = (/-6/l**2+12*x/l**3, -4/l+6*x/l**2, 6/l**2-12*x/l**3, -2/l+6*x/l**2/)
+            x = l
+            psi2_l(1,:) = (/-6/l**2+12*x/l**3, -4/l+6*x/l**2, 6/l**2-12*x/l**3, -2/l+6*x/l**2/)
+            psi_ue1 = matmul(psi2_0,u_e)
+            mat_sigma(ii,1) = -E*psi_ue1(1,ii)*ymax
+            psi_ue2 = matmul(psi2_l,u_e)
+            mat_sigma(ii,2) = -E*psi_ue2(1,ii)*ymax
+        end do
+        print*, u_e
     end program
     
     subroutine matmu (A,B,C,D)
