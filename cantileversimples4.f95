@@ -90,13 +90,9 @@ implicit none
                 transmat = transpose(mat_transf)
                 call matmu(transmat,kele,mat_transf,kglobal1)
                 kglobal = kglobal+kglobal1
-!                 
-
-                
+               
             end do
-       
       
-       
      gdl_livres = fa(:,1)
     
     gdl_impostos = cc(:,1)
@@ -104,9 +100,7 @@ implicit none
       kll = kglobal(gdl_livres,gdl_livres)
       kli = kglobal(gdl_livres, gdl_impostos)
       kii = kglobal(gdl_impostos,gdl_impostos)
-     
-      
-      n = 10
+          n = 10
       call inv(kll, invkll, n) 
       flivres = fa(:,2)
       
@@ -117,7 +111,7 @@ implicit none
         
          des_global(cc(:,1))= cc(:,2)
          des_global(fa(:,1)) = u_liv
-         print*,'Deslocamentos (em metros)'
+         print*, 'Deslocamentos (em metros)'
          desloc_trans=des_global(1:nele:2)
          print*, desloc_trans
          print*, '----------------------------'
@@ -139,11 +133,11 @@ implicit none
             x = l
             psi2_l(1,:) = (/-6/l**2+12*x/l**3, -4/l+6*x/l**2, 6/l**2-12*x/l**3, -2/l+6*x/l**2/)
             psi_ue1 = matmul(psi2_0,u_e)
-            mat_sigma(ii,1) = -E*psi_ue1(1,ii)*ymax
+            mat_sigma(ii,1) = -E*psi_ue1(1,1)*ymax
             psi_ue2 = matmul(psi2_l,u_e)
-            mat_sigma(ii,2) = -E*psi_ue2(1,ii)*ymax
+            mat_sigma(ii,2) = -E*psi_ue2(1,1)*ymax
         end do
-        print*, u_e
+        print*, mat_sigma
     end program
     
     subroutine matmu (A,B,C,D)
