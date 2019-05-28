@@ -19,13 +19,14 @@ implicit none
     double precision, dimension (10,2) :: kli
     double precision, dimension (2,10) :: transkli
     double precision, dimension (2,2) :: kii
-    integer :: n
+    integer :: n, nmodos
     double precision :: coef, coef_massa
     double precision, dimension (12,12) :: kglobal, kglobal1, mglobal, mglobal1
     double precision, dimension (12) :: des_global
     integer, dimension (12,12) :: ident
     integer, dimension (5,4) ::  mat_conect
-    double precision, dimension (10) :: u_liv, freqs, flivres
+    double precision, dimension (10) :: u_liv, freq, flivres
+    double precision, dimension (5) :: freqs
     integer, dimension (10) :: gdl_livres
     integer, dimension (2) :: gdl_impostos
     double precision, dimension (2,1) :: u_imp
@@ -36,7 +37,8 @@ implicit none
     double precision, dimension (5,2) :: mat_sigma
     double precision, dimension (1,1) :: psi_ue1, psi_ue2
     double precision :: pi = 3.14159265359
-    
+   
+
     
 
   a = 0.05
@@ -94,7 +96,6 @@ implicit none
   transmat = transpose(mat_transf)
   call matmu(transmat,kele,mat_transf,kglobal1)
   kglobal = kglobal+kglobal1
-               
   end do
   n = 10    
   gdl_livres = fa(:,1)
@@ -104,7 +105,6 @@ implicit none
   kll = kglobal(gdl_livres,gdl_livres)
   kli = kglobal(gdl_livres, gdl_impostos)
   kii = kglobal(gdl_impostos,gdl_impostos)
-  
   call inv(kll, invkll, n) 
   flivres = fa(:,2)
       
@@ -140,8 +140,7 @@ implicit none
     psi_ue2 = matmul(psi2_l,u_e)
     mat_sigma(ii,2) = -E*psi_ue2(1,1)*ymax
   end do
-    print*, '-----------------------'
-    print*, '-----------------------'
+    
         
         !ANALISE DINAMICO DA VIGA
         
@@ -168,17 +167,27 @@ do ii = 1,nele
   allocate (mll(n,n), eigval(n), eigvet(n,n))
        
   mll = mglobal(gdl_livres,gdl_livres)
-       
-
+  kll = kglobal(gdl_livres,gdl_livres)     
+    nmodos = 5
   call lapack_eig (n,kll,mll,EigVal,EigVet)
-    print*, kglobal
-    print*, '--------------'
-  !  print*, EigVet
+  
+  
+  
+    print*, '-----------------------'
+    print*, 'As frequencias naturais sao (Hz): '
+     freq = sqrt(eigval)*pi/2  
+     
+do ii = 1, nmodos
+    freqs(ii) = minval(freq)/10
+    freq(minloc(freq)) = 999999.0d0
+end do
+     !freqs(:) = freq(1:nmodos)
+    print*, freqs
+
     
     deallocate (kll,mll,eigval,eigvet) 
 
-  !  freqs = eigval*pi/2
-
+    
 end program
     
     subroutine matmu (A,B,C,D)
