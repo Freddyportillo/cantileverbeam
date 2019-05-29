@@ -37,7 +37,9 @@ implicit none
     double precision, dimension (5,2) :: mat_sigma
     double precision, dimension (1,1) :: psi_ue1, psi_ue2
     double precision :: pi = 3.14159265359
-   
+    double precision, dimension (5,5) :: fnq
+    double precision, dimension (6,5) :: modos
+    double precision, dimension (5) :: errofreqs, freqs_teoricas
 
     
 
@@ -181,14 +183,23 @@ do ii = 1, nmodos
     freqs(ii) = minval(freq)/10
     freq(minloc(freq)) = 999999.0d0
 end do
-     !freqs(:) = freq(1:nmodos)
+    freqs_teoricas(:) = (/2.0955, 13.1321, 36.7703, 72.0552, 119.1123/)
     print*, freqs
-
+    print*, 'Erro (%):'
+    errofreqs = (freqs_teoricas-freqs)/freqs_teoricas*100
+    print*, errofreqs
+    call sortmodos(eigvet,modos)
+    print*, '-----------------------'
+    print*, 'Os modos de vibracao sao:'
+    print*, modos
     
     deallocate (kll,mll,eigval,eigvet) 
+  fnq = 0.0d0
+    do ii = 1,nmodos   
+    fnq(ii,ii) = freqs(ii)
+    end do
 
-    
-end program
+  end program
     
     subroutine matmu (A,B,C,D)
       !programa para multiplicacao de 3 matrizes
@@ -261,3 +272,31 @@ do k=1,n
   b(k)=0.0
 end do
     end subroutine inv
+
+    subroutine sortmodos(eigvet, modos)
+      integer :: nmodos = 6
+  double precision, dimension (10,10) :: eigvet
+  double precision, dimension (6,5) :: modos
+  
+  modos(1,:) = 0.0d0
+  do ii = 2, nmodos
+    modos(ii,1) = minval(eigvet(:,1))
+    eigvet(minloc(eigvet(:,1)),1) = 999999.0d0
+  end do
+  do ii = 2, nmodos
+    modos(ii,2) = minval(eigvet(:,2))
+    eigvet(minloc(eigvet(:,2)),2) = 999999.0d0
+  end do
+  do ii = 2, nmodos
+    modos(ii,3) = minval(eigvet(:,3))
+    eigvet(minloc(eigvet(:,3)),3) = 999999.0d0
+  end do
+  do ii = 2, nmodos
+    modos(ii,4) = minval(eigvet(:,4))
+    eigvet(minloc(eigvet(:,4)),4) = 999999.0d0
+  end do
+  do ii = 2, nmodos
+    modos(ii,5) = minval(eigvet(:,5))
+    eigvet(minloc(eigvet(:,5)),5) = 999999.0d0
+  end do
+end subroutine sortmodos
